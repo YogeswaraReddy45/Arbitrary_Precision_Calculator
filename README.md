@@ -4,7 +4,7 @@
 
 This project is a **Big Integer Calculator implemented in C** using a **Doubly Linked List**.
 
-Since the normal integer data types in C have a limited range, this project stores each digit of a large number in a linked list and performs arithmetic operations digit by digit.
+Since normal integer data types in C have a limited range, this project stores each digit of a large number in a doubly linked list and performs arithmetic operations digit by digit.
 
 The calculator supports:
 
@@ -15,21 +15,23 @@ The calculator supports:
 * Positive and negative numbers
 * Large integers
 
-Each digit of the input number is stored as a node in a doubly linked list. The list contains `data`, `prev`, and `next` pointers.
+Each digit of the input number is stored in a node of a doubly linked list. Each node contains `data`, `prev`, and `next` pointers.
 
 ---
 
 ## 🚀 Features
 
 * Handles large integers beyond the normal integer range
-* Uses Doubly Linked List for storing digits
+* Uses a Doubly Linked List for storing digits
 * Supports positive and negative operands
 * Supports `+`, `-`, `x`, `X`, and `/` operators
-* Performs arithmetic using separate functions
+* Performs each arithmetic operation using a separate function
 * Validates input digits
 * Handles division by zero
-* Dynamic memory allocation
-* Uses a Makefile for compilation
+* Uses dynamic memory allocation
+* Uses modular programming with multiple source files
+* Uses a Makefile for efficient compilation
+* Avoids unnecessary recompilation of unchanged source files
 
 ---
 
@@ -71,6 +73,21 @@ Big-Integer-Calculator/
 └── Slist.exe
 ```
 
+### Source Files
+
+| File            | Description                                        |
+| --------------- | -------------------------------------------------- |
+| `main.c`        | Main driver program                                |
+| `fun.h`         | Structure, macros, and function declarations       |
+| `create_list.c` | Creates linked lists from input numbers            |
+| `insert.c`      | Inserts nodes at beginning and end                 |
+| `add.c`         | Performs addition                                  |
+| `sub.c`         | Performs subtraction                               |
+| `mul.c`         | Performs multiplication using a single result list |
+| `div.c`         | Performs division                                  |
+| `compare.c`     | Compares two linked lists                          |
+| `makefile`      | Automates and manages compilation                  |
+
 ---
 
 ## 🧩 File Description
@@ -81,13 +98,17 @@ The main driver program.
 
 It:
 
-* Reads operands and operator through command-line arguments
+* Reads operands and the operator through command-line arguments
 * Creates linked lists for both operands
 * Determines the sign of the result
 * Calls the appropriate arithmetic function
 * Prints the final result
 
-The program expects exactly three command-line arguments in addition to the program name.
+The program takes the operands and operator through command-line arguments.
+
+```text
+operand1 operator operand2
+```
 
 ---
 
@@ -95,7 +116,7 @@ The program expects exactly three command-line arguments in addition to the prog
 
 Contains:
 
-* Structure definition
+* Doubly linked list structure definition
 * Return status macros
 * Function declarations
 
@@ -108,7 +129,7 @@ typedef struct list
 } list;
 ```
 
-Status values used in the project include:
+Status values used in the project:
 
 ```c
 #define SUCCESS 0
@@ -117,7 +138,7 @@ Status values used in the project include:
 #define LIST_IS_EMPTY -3
 ```
 
-The header also declares the functions used for list creation, insertion, comparison, arithmetic operations, printing, and deletion.
+The header file contains declarations for list creation, insertion, comparison, arithmetic operations, printing, and deletion.
 
 ---
 
@@ -128,12 +149,12 @@ Converts the input number into a doubly linked list.
 The function:
 
 1. Checks for `+` or `-` sign.
-2. Reads each character.
-3. Validates whether it is a digit.
+2. Reads each character of the number.
+3. Validates whether the character is a digit.
 4. Converts the character into an integer digit.
 5. Inserts the digit into the linked list.
 
-Invalid characters result in `NOT_A_VALID_DIGIT`.
+If an invalid character is found, `NOT_A_VALID_DIGIT` is returned.
 
 ---
 
@@ -144,13 +165,27 @@ Contains two functions:
 * `insert_first()`
 * `insert_last()`
 
-## These functions dynamically allocate nodes and insert them at the beginning or end of the doubly linked list.
+These functions dynamically allocate a node and insert it at the beginning or end of the doubly linked list.
+
+```text
+insert_first()
+      ↓
+Insert node at beginning
+
+insert_last()
+      ↓
+Insert node at end
+```
+
+---
 
 ### `compare.c`
 
 Compares two linked lists representing large numbers.
 
-It traverses both lists and determines which operand is greater.
+The function traverses the lists and compares their corresponding digits to determine which number is greater.
+
+The comparison operation is used by subtraction and division.
 
 ---
 
@@ -158,7 +193,16 @@ It traverses both lists and determines which operand is greater.
 
 Performs addition of two large numbers.
 
-The addition starts from the least significant digit and handles the carry generated during addition.
+The addition starts from the least significant digit and processes the numbers digit by digit.
+
+It handles:
+
+* Addition of corresponding digits
+* Carry
+* Different number of digits
+* Creating the result list
+
+Example:
 
 ```text
    999
@@ -175,28 +219,60 @@ The result digits are inserted at the beginning of the result list.
 
 Performs subtraction of large numbers.
 
-The function handles:
+The function processes the digits from the least significant digit and handles borrowing whenever required.
+
+It handles:
 
 * Digit-by-digit subtraction
 * Borrow
-* Different number of digits
+* Numbers with different number of digits
 
-Borrow is propagated to the next digit when required.
+Example:
+
+```text
+  1000
+-    1
+------
+   999
+```
 
 ---
 
 ### `mul.c`
 
-Performs multiplication of large numbers using the digits stored in the linked lists.
+Performs multiplication of large numbers using a **single result linked list**.
 
-It handles:
+Instead of creating separate linked lists for each intermediate multiplication result, this implementation uses **one result list** and continuously updates it while processing the digits of the second operand.
+
+The multiplication handles:
 
 * Multiplication of individual digits
 * Carry
 * Position shifting
-* Addition of intermediate results
+* Updating the same result list
+* Processing the second operand digit by digit
 
-The implementation uses a `count` value to shift the intermediate multiplication result according to the digit position.
+A `count` variable is used to shift the multiplication position according to the current digit of the second operand.
+
+### Multiplication Approach
+
+For example:
+
+```text
+       123
+     ×  45
+     -----
+       615
+      4920
+     ------
+      5535
+```
+
+In this implementation, separate lists are **not created for `615` and `4920`**.
+
+Instead, a **single result list** is maintained and updated as each digit of the second operand is processed.
+
+This reduces the need for multiple intermediate result lists.
 
 ---
 
@@ -204,34 +280,113 @@ The implementation uses a `count` value to shift the intermediate multiplication
 
 Performs division of large numbers.
 
-The implementation repeatedly works with subtraction and comparison to obtain the quotient. It also manages the quotient digits using the linked-list representation.
+The implementation uses:
+
+* Linked-list representation
+* Comparison
+* Subtraction
+* Result-list manipulation
+
+The divisor is repeatedly subtracted while comparison is used to determine when the division should stop.
+
+The program also checks for division by zero before performing the operation.
 
 ---
 
-## ▶️ How to Compile
+# 🔨 Makefile
 
-Clone the repository:
+The project uses a **Makefile** to simplify and make the compilation process more efficient.
 
-```bash
-git clone <repository-url>
-cd Big-Integer-Calculator
+Since the project contains multiple source files, manually compiling every `.c` file each time can be inefficient.
+
+Instead, the Makefile manages the compilation of the source files and their corresponding object files.
+
+---
+
+## ⚡ Efficient Compilation
+
+One of the main advantages of using a Makefile is **efficient compilation**.
+
+When the project is compiled, the source files are converted into object files:
+
+```text
+main.c          → main.o
+create_list.c   → create_list.o
+insert.c        → insert.o
+add.c           → add.o
+sub.c           → sub.o
+mul.c           → mul.o
+div.c           → div.o
+compare.c       → compare.o
 ```
 
-Compile using the Makefile:
+The object files are then linked together to create the final executable.
+
+```text
+Object Files
+     ↓
+   Linking
+     ↓
+ Slist.exe
+```
+
+If only one source file is modified, the Makefile can compile only the modified source file and then link the updated object files.
+
+For example:
+
+```text
+add.c modified
+      ↓
+compile only add.c
+      ↓
+    add.o
+      ↓
+link with other .o files
+      ↓
+  Slist.exe
+```
+
+This avoids recompiling unchanged source files and makes the build process more efficient.
+
+---
+
+## ▶️ Compile Using Makefile
+
+Run:
 
 ```bash
 make
 ```
 
-Or compile manually:
+The Makefile handles the compilation and linking process automatically.
+
+---
+
+## 🧹 Clean Generated Files
+
+To remove generated object files and the executable:
+
+```bash
+make clean
+```
+
+This allows the project to be rebuilt from scratch when required.
+
+---
+
+## ▶️ Manual Compilation
+
+The project can also be compiled manually using GCC:
 
 ```bash
 gcc main.c create_list.c insert.c add.c sub.c mul.c div.c compare.c -o Slist
 ```
 
+However, using the Makefile is more convenient and efficient for a multi-file project.
+
 ---
 
-## ▶️ How to Run
+# ▶️ How to Run
 
 The calculator uses **command-line arguments**.
 
@@ -241,7 +396,11 @@ The calculator uses **command-line arguments**.
 ./Slist <operand1> <operator> <operand2>
 ```
 
-### Addition
+---
+
+# 🧪 Examples
+
+## Addition
 
 ```bash
 ./Slist 123456789 + 987654321
@@ -253,7 +412,9 @@ Output:
 1111111110
 ```
 
-### Subtraction
+---
+
+## Subtraction
 
 ```bash
 ./Slist 1000000000 - 1
@@ -265,7 +426,9 @@ Output:
 999999999
 ```
 
-### Multiplication
+---
+
+## Multiplication
 
 ```bash
 ./Slist 12345 x 678
@@ -277,7 +440,9 @@ Output:
 8369910
 ```
 
-### Division
+---
+
+## Division
 
 ```bash
 ./Slist 1000 / 25
@@ -289,11 +454,9 @@ Output:
 40
 ```
 
-For multiplication, the program accepts both `x` and `X`.
-
 ---
 
-## ➕ Supported Operators
+# ➕ Supported Operators
 
 | Operator | Operation      |
 | -------- | -------------- |
@@ -305,45 +468,53 @@ For multiplication, the program accepts both `x` and `X`.
 
 ---
 
-## 🔢 Negative Numbers
+# ➖ Negative Numbers
 
-The calculator also supports signed operands.
+The calculator supports positive and negative operands.
 
-Examples:
+### Example
 
 ```bash
 ./Slist -100 + 50
 ```
 
+Output:
+
 ```text
 -50
 ```
+
+### Example
 
 ```bash
 ./Slist -100 - 50
 ```
 
+Output:
+
 ```text
 -150
 ```
+
+### Example
 
 ```bash
 ./Slist -100 x -5
 ```
 
+Output:
+
 ```text
 500
 ```
 
-The sign handling is performed in `main.c` before calling the arithmetic functions.
+The sign of the result is determined based on the signs of the two operands and the selected operator.
 
 ---
 
-## ⚠️ Error Handling
+# ⚠️ Error Handling
 
-The project handles different invalid inputs.
-
-### Invalid Number
+## Invalid Number
 
 ```bash
 ./Slist 123a + 456
@@ -355,7 +526,9 @@ Output:
 operand1 is invalid
 ```
 
-### Invalid Operator
+---
+
+## Invalid Operator
 
 ```bash
 ./Slist 100 % 20
@@ -367,7 +540,9 @@ Output:
 not a valid operator
 ```
 
-### Division by Zero
+---
+
+## Division by Zero
 
 ```bash
 ./Slist 100 / 0
@@ -379,31 +554,21 @@ Output:
 division with zero not possible
 ```
 
-## These validations are handled in `main.c` and `create_list.c`.
+---
 
-## 🧠 Concepts Used
+## Invalid Number of Arguments
 
-This project helped in understanding and implementing:
+If the required command-line arguments are not provided:
 
-* Structures
-* Doubly Linked Lists
-* Pointers
-* Pointer-to-pointer concepts
-* Dynamic Memory Allocation
-* Command Line Arguments
-* Header Files
-* Modular Programming
-* Function Prototypes
-* Carry and Borrow
-* Large Number Arithmetic
-* Memory Management
-* Makefile
+```text
+provide valid arguments
+```
 
 ---
 
-## 💡 Working Principle
+# 🔗 Doubly Linked List Representation
 
-Each digit of a large number is stored in a separate linked-list node.
+Each digit of a number is stored in a separate node.
 
 For example:
 
@@ -420,18 +585,54 @@ NULL
 Each node contains:
 
 ```text
-data
-prev
-next
++-------+-------+-------+
+| prev  | data  | next  |
++-------+-------+-------+
 ```
 
-This allows the program to traverse the number in both directions.
+* `prev` points to the previous node
+* `data` stores the digit
+* `next` points to the next node
 
-For arithmetic operations, the program generally starts from the least significant digit and processes digits while maintaining carry or borrow.
+This allows traversal in both directions.
 
 ---
 
-## 📌 Important Functions
+# 🧠 Working Principle
+
+The project represents a large number as a doubly linked list.
+
+For example:
+
+```text
+Number = 987654321
+
+[9] ⇄ [8] ⇄ [7] ⇄ [6] ⇄ [5] ⇄ [4] ⇄ [3] ⇄ [2] ⇄ [1]
+```
+
+The arithmetic operations process the digits individually instead of storing the complete number in a normal integer variable.
+
+For addition and subtraction, processing starts from the least significant digit using the `prev` pointer.
+
+The project uses separate functions for each arithmetic operation, making the implementation modular and easier to maintain.
+
+---
+
+# 🧹 Memory Management
+
+The project uses dynamic memory allocation for creating linked-list nodes.
+
+Memory is allocated using:
+
+```c
+malloc(sizeof(list));
+```
+
+The project also contains a `delete_list()` function to free dynamically allocated nodes.
+
+---
+
+# 🧩 Important Functions
 
 ```c
 create_list()
@@ -448,40 +649,66 @@ print_list()
 delete_list()
 ```
 
-These functions are declared in `fun.h` and implemented across separate source files.
+---
+
+# 📚 Concepts Used
+
+This project uses the following C programming and data-structure concepts:
+
+* Structures
+* Doubly Linked Lists
+* Pointers
+* Pointer-to-pointer concepts
+* Dynamic Memory Allocation
+* Command Line Arguments
+* Header Files
+* Function Prototypes
+* Modular Programming
+* Carry and Borrow
+* Large Number Arithmetic
+* Memory Management
+* Makefile
+* Object Files
+* Compilation and Linking
+* Switch Case
+* Character Handling
 
 ---
 
-## 🎯 Learning Outcome
+# 🎯 Learning Outcome
 
-Through this project, I learned how to implement arithmetic operations on numbers larger than the normal C integer limits using a **Doubly Linked List**.
+Through this project, I learned how to implement arithmetic operations on **large integers** using a **Doubly Linked List** instead of relying on the limited range of built-in integer data types.
 
 I also gained practical experience with:
 
-* Data structures
-* Modular C programming
+* Doubly Linked List implementation
 * Dynamic memory allocation
 * Pointers
 * Command-line arguments
-* Makefile-based compilation
-* Handling large integer arithmetic
+* Modular programming in C
+* Carry and borrow handling
+* Large integer arithmetic
+* Memory management
+* Compilation and linking
+* Makefile-based efficient compilation
+* Working with object files
 
 ---
 
-## 👨‍💻 Author
-
-**Gajulapalli Yogeswara Reddy**
-
----
-
-## ⭐ Future Improvements
+# 🚀 Future Improvements
 
 Possible improvements for this project:
 
 * Add modulus `%` operation
 * Improve division algorithm efficiency
-* Add floating-point support
 * Add more input validation
-* Improve memory cleanup
 * Add automated test cases
+* Improve memory cleanup
 * Add a user-friendly menu-based interface
+* Add floating-point number support
+
+---
+
+# 👨‍💻 Author
+
+**Gajulapalli Yogeswara Reddy**
